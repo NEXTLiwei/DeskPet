@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 // 引入 child_process 模块 
@@ -14,13 +14,25 @@ const defaultSettings = {
   menuColor: '#4a90e2',
   randomMovement: true,
   autoActions: true,
-  actionFrequency: 'medium'
+  actionFrequency: 'medium',
+  // 工具设置
+  tools: {
+    position1: 'calc',
+    position2: 'screenshot',
+    position3: 'clock',
+    position4: 'help'
+  }
 };
 
 // 当前设置
 let currentSettings = { ...defaultSettings };
 
 let mainWindow;
+
+// 确保应用启动时就禁用菜单栏
+app.on('ready', () => {
+  Menu.setApplicationMenu(null);
+});
 
 function createWindow() {
   // 获取屏幕尺寸
@@ -123,12 +135,13 @@ ipcMain.on('open-settings', () => {
     return;
   }
   
-  // 创建设置窗口
+  // 创建无边框设置窗口 - 完全没有菜单和标准窗口框架
   settingsWindow = new BrowserWindow({
-    width: 400,
-    height: 500,
+    width: 800,
+    height: 600,
     title: '桌面宠物设置',
-    resizable: false,
+    frame: false, // 无边框窗口
+    resizable: true,
     minimizable: true,
     maximizable: false,
     parent: mainWindow,
@@ -146,6 +159,17 @@ ipcMain.on('open-settings', () => {
   settingsWindow.on('closed', () => {
     settingsWindow = null;
   });
+});
+
+// 监听窗口控制按钮事件
+ipcMain.on('window-control', (event, command) => {
+  if (settingsWindow) {
+    if (command === 'minimize') {
+      settingsWindow.minimize();
+    } else if (command === 'close') {
+      settingsWindow.close();
+    }
+  }
 });
 
 // 监听退出应用请求

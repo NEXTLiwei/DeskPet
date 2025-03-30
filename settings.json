@@ -1,0 +1,14 @@
+{
+  "startup": true,
+  "topmost": true,
+  "sounds": true,
+  "petSize": 100,
+  "petStyle": "default",
+  "menuColor": "#4a90e2",
+  "randomMovement": true,
+  "autoActions": true,
+  "actionFrequency": "medium",
+  "tools": {
+    "position1": "calc"
+  }
+}

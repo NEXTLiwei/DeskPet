@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>桌面宠物设置</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background-color: #f0f0f0;
+      overflow: hidden;
+    }
+    
+    /* 自定义标题栏 */
+    .title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #333;
+      color: white;
+      padding: 8px 15px;
+      -webkit-app-region: drag; /* 允许拖动窗口 */
+      user-select: none;
+    }
+    
+    .title-bar-text {
+      font-size: 14px;
+      font-weight: bold;
+    }
+    
+    .window-controls {
+      display: flex;
+      gap: 10px;
+      -webkit-app-region: no-drag; /* 按钮区域不可拖动 */
+    }
+    
+    .control-button {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+    
+    .minimize-button {
+      background-color: #FFC107;
+    }
+    
+    .close-button {
+      background-color: #F44336;
+    }
+    
+    .control-button:hover {
+      opacity: 0.8;
+    }
+    
+    /* 内容区域 */
+    .content-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    
+    .sidebar {
+      width: 200px;
+      background-color: #333;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    
+    .sidebar-menu {
+      flex-grow: 1;
+    }
+    
+    .sidebar-item {
+      padding: 15px 20px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      font-size: 16px;
+    }
+    
+    .sidebar-item:hover, .sidebar-item.active {
+      background-color: #444;
+    }
+    
+    .about-button {
+      padding: 15px 20px;
+      text-align: center;
+      margin-top: auto;
+      background-color: #333;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    
+    .content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background-color: #777;
+      color: white;
+    }
+    
+    .content-section {
+      display: none;
+    }
+    
+    .content-section.active {
+      display: block;
+    }
+    
+    .pet-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 20px auto;
+    }
+    
+    .pet-image {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 120px;
+    }
+    
+    .position-marker {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background-color: white;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    #position-1 {
+      top: 25%;
+      left: 25%;
+    }
+    
+    #position-2 {
+      top: 25%;
+      right: 25%;
+    }
+    
+    #position-3 {
+      bottom: 25%;
+      left: 25%;
+    }
+    
+    #position-4 {
+      bottom: 25%;
+      right: 25%;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    
+    .tools-section {
+      margin-top: 20px;
+    }
+    
+    .tool-selection {
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .tool-selection label {
+      margin-right: 10px;
+      min-width: 70px;
+    }
+    
+    select, input[type="color"] {
+      padding: 8px;
+      width: 200px;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    
+    input[type="range"] {
+      width: 200px;
+    }
+    
+    button {
+      margin-top: 10px;
+      padding: 10px 15px;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .manage-tools-btn {
+      display: block;
+      margin-top: 20px;
+      padding: 10px;
+      width: 100%;
+      text-align: center;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- 自定义标题栏 -->
+  <div class="title-bar">
+    <div class="title-bar-text">桌面宠物设置</div>
+    <div class="window-controls">
+      <div class="control-button minimize-button" id="minimize-btn">-</div>
+      <div class="control-button close-button" id="close-btn">✕</div>
+    </div>
+  </div>
+  
+  <div class="content-container">
+    <div class="sidebar">
+      <div class="sidebar-menu">
+        <div class="sidebar-item active" data-section="tools">小工具</div>
+        <div class="sidebar-item" data-section="personalization">个性化</div>
+        <div class="sidebar-item" data-section="ai-settings">AI设置</div>
+        <div class="sidebar-item" data-section="other-settings">其他设置</div>
+      </div>
+      <div class="about-button" data-section="about">关于</div>
+    </div>
+    
+    <div class="content">
+      <!-- 小工具 (Tools) Section -->
+      <div class="content-section active" id="tools-section">
+        <div class="pet-container">
+          <img src="assets/pet-normal.png" class="pet-image">
+          <div class="position-marker" id="position-1">1</div>
+          <div class="position-marker" id="position-2">2</div>
+          <div class="position-marker" id="position-3">3</div>
+          <div class="position-marker" id="position-4">4</div>
+        </div>
+        
+        <div class="tools-section">
+          <div class="tool-selection">
+            <label>小工具1:</label>
+            <select class="tool-dropdown" id="tool-1">
+              <option value="calc">Calc</option>
+              <option value="screenshot">Screenshot</option>
+              <option value="clock">Clock</option>
+            </select>
+          </div>
+          
+          <button class="manage-tools-btn">管理小工具</button>
+        </div>
+      </div>
+      
+      <!-- 个性化 (Personalization) Section -->
+      <div class="content-section" id="personalization-section">
+        <h2>个性化设置</h2>
+        
+        <div class="form-group">
+          <label for="pet-size">宠物大小: <span id="size-value">100%</span></label>
+          <input type="range" id="pet-size" min="50" max="200" value="100">
+        </div>
+        
+        <div class="form-group">
+          <label for="pet-style">宠物风格:</label>
+          <select id="pet-style">
+            <option value="default">默认</option>
+            <option value="robot">机器人</option>
+            <option value="animal">动物</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="menu-color">菜单颜色:</label>
+          <input type="color" id="menu-color" value="#4a90e2">
+        </div>
+      </div>
+      
+      <!-- AI设置 (AI Settings) Section -->
+      <div class="content-section" id="ai-settings-section">
+        <h2>AI设置</h2>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="auto-actions" checked> 自动行为
+          </label>
+        </div>
+        
+        <div class="form-group">
+          <label for="action-frequency">行为频率:</label>
+          <select id="action-frequency">
+            <option value="low">低</option>
+            <option value="medium" selected>中</option>
+            <option value="high">高</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="random-movement" checked> 随机移动
+          </label>
+        </div>
+      </div>
+      
+      <!-- 其他设置 (Other Settings) Section -->
+      <div class="content-section" id="other-settings-section">
+        <h2>其他设置</h2>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="startup" checked> 开机启动
+          </label>
+        </div>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="topmost" checked> 始终置顶
+          </label>
+        </div>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="sounds" checked> 启用声音
+          </label>
+        </div>
+      </div>
+      
+      <!-- 关于 (About) Section -->
+      <div class="content-section" id="about-section">
+        <h2>关于</h2>
+        <p>桌面宠物 v1.0.0</p>
+        <p>© 2023 Desktop Pet</p>
+      </div>
+      
+      <div class="button-group">
+        <button id="save-btn">保存设置</button>
+        <button id="reset-btn">重置默认</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const { ipcRenderer } = require('electron');
+    
+    // 窗口控制
+    document.getElementById('minimize-btn').addEventListener('click', () => {
+      ipcRenderer.send('window-control', 'minimize');
+    });
+    
+    document.getElementById('close-btn').addEventListener('click', () => {
+      ipcRenderer.send('window-control', 'close');
+    });
+    
+    // Tab switching functionality
+    document.querySelectorAll('.sidebar-item, .about-button').forEach(item => {
+      item.addEventListener('click', () => {
+        // Update active sidebar item
+        document.querySelectorAll('.sidebar-item, .about-button').forEach(el => {
+          el.classList.remove('active');
+        });
+        item.classList.add('active');
+        
+        // Show corresponding content section
+        const sectionId = item.getAttribute('data-section') + '-section';
+        document.querySelectorAll('.content-section').forEach(section => {
+          section.classList.remove('active');
+        });
+        document.getElementById(sectionId).classList.add('active');
+      });
+    });
+  </script>
+  <script src="setting.js"></script>
+</body>
+</html>
