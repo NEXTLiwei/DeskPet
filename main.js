@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
-// 引入 child_process 模块
+// 引入 child_process 模块 
 const { exec } = require('child_process');
 
 // 默认设置
