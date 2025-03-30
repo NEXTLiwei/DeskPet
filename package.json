@@ -1,0 +1,12 @@
+{
+    "name": "desktop-pet",
+    "version": "1.0.0",
+    "description": "桌面宠物应用",
+    "main": "main.js",
+    "scripts": {
+      "start": "electron ."
+    },
+    "dependencies": {
+      "electron": "^28.0.0"
+    }
+  }
