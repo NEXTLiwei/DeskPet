@@ -133,17 +133,26 @@
     }
     
     .position-marker {
-      position: absolute;
-      width: 30px;
-      height: 30px;
-      background-color: white;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: bold;
-      cursor: pointer;
-    }
+  /* 原有样式 */
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background-color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.position-marker.active {
+  background-color: #4a90e2;
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(74, 144, 226, 0.7);
+}
     
     #position-1 {
       top: 25%;
@@ -210,6 +219,11 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    button:hover {
+      background-color: #444;
     }
     
     .manage-tools-btn {
@@ -261,11 +275,9 @@
         
         <div class="tools-section">
           <div class="tool-selection">
-            <label>小工具1:</label>
+            <label>小工具:</label>
             <select class="tool-dropdown" id="tool-1">
-              <option value="calc">Calc</option>
-              <option value="screenshot">Screenshot</option>
-              <option value="clock">Clock</option>
+              <!-- 选项将由JavaScript动态添加 -->
             </select>
           </div>
           
@@ -360,36 +372,7 @@
     </div>
   </div>
   
-  <script>
-    const { ipcRenderer } = require('electron');
-    
-    // 窗口控制
-    document.getElementById('minimize-btn').addEventListener('click', () => {
-      ipcRenderer.send('window-control', 'minimize');
-    });
-    
-    document.getElementById('close-btn').addEventListener('click', () => {
-      ipcRenderer.send('window-control', 'close');
-    });
-    
-    // Tab switching functionality
-    document.querySelectorAll('.sidebar-item, .about-button').forEach(item => {
-      item.addEventListener('click', () => {
-        // Update active sidebar item
-        document.querySelectorAll('.sidebar-item, .about-button').forEach(el => {
-          el.classList.remove('active');
-        });
-        item.classList.add('active');
-        
-        // Show corresponding content section
-        const sectionId = item.getAttribute('data-section') + '-section';
-        document.querySelectorAll('.content-section').forEach(section => {
-          section.classList.remove('active');
-        });
-        document.getElementById(sectionId).classList.add('active');
-      });
-    });
-  </script>
+
   <script src="setting.js"></script>
 </body>
 </html>

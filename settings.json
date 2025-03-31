@@ -9,6 +9,9 @@
   "autoActions": true,
   "actionFrequency": "medium",
   "tools": {
-    "position1": "calc"
+    "position1": "calc",
+    "position2": "screenshot",
+    "position3": "clock",
+    "position4": "note"
   }
 }

@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, screen, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
+// 当前设置
 // 引入 child_process 模块 
 const { exec } = require('child_process');
 
@@ -68,7 +69,13 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
-  loadSettings();
+  
+  // 初始化 IPC 监听器
+  initIPCListeners();
+  
+  // 加载设置
+  currentSettings = loadSettings();
+
 });
 
 app.on('window-all-closed', () => {
@@ -83,126 +90,147 @@ app.on('activate', () => {
   }
 });
 
-// 监听忽略鼠标事件的请求
-ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
-  mainWindow.setIgnoreMouseEvents(ignore, options);
-});
-
-// 监听打开系统应用的请求
-ipcMain.on('open-system-app', (event, appName) => {
-  if (process.platform === 'win32') {
-    exec(`start ${appName}`, (error) => {
-      if (error) {
-        console.error(`启动应用错误: ${error}`);
-      }
-    });
-  } else if (process.platform === 'darwin') {
-    exec(`open -a "${appName}"`, (error) => {
-      if (error) {
-        console.error(`启动应用错误: ${error}`);
-      }
-    });
-  } else if (process.platform === 'linux') {
-    exec(appName, (error) => {
-      if (error) {
-        console.error(`启动应用错误: ${error}`);
-      }
-    });
-  }
-});
-
-// 监听系统截图请求
-ipcMain.on('take-system-screenshot', (event) => {
-  if (process.platform === 'darwin') {
-    // macOS 截图快捷键 Cmd+Shift+4
-    exec('screencapture -i ~/Desktop/screenshot.png', (error) => {
-      if (error) {
-        console.error(`截图错误: ${error}`);
-      }
-    });
-  }
-  // 对于其他平台，已在 renderer.js 中处理
-});
-
-// 存储设置窗口的引用
-let settingsWindow = null;
-
-// 监听打开设置窗口的请求
-ipcMain.on('open-settings', () => {
-  // 如果设置窗口已经存在，则聚焦到该窗口
-  if (settingsWindow) {
-    settingsWindow.focus();
-    return;
-  }
-  
-  // 创建无边框设置窗口 - 完全没有菜单和标准窗口框架
-  settingsWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    title: '桌面宠物设置',
-    frame: false, // 无边框窗口
-    resizable: true,
-    minimizable: true,
-    maximizable: false,
-    parent: mainWindow,
-    modal: false,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+function initIPCListeners() {
+  // 监听获取设置请求 (同步)
+  ipcMain.on('get-settings', (event) => {
+    try {
+      // 返回当前设置
+      event.returnValue = currentSettings || loadSettings();
+    } catch (error) {
+      console.error('获取设置失败:', error);
+      event.returnValue = defaultSettings;
     }
   });
-  
-  // 加载设置页面
-  settingsWindow.loadFile('settings.html');
-  
-  // 处理窗口关闭事件
-  settingsWindow.on('closed', () => {
-    settingsWindow = null;
-  });
-});
 
-// 监听窗口控制按钮事件
-ipcMain.on('window-control', (event, command) => {
-  if (settingsWindow) {
+  // 监听工具重载请求
+  ipcMain.on('reload-tools', () => {
+    if(mainWindow) {
+      mainWindow.webContents.send('apply-settings', currentSettings);
+      console.log('已发送工具重载请求到渲染进程');
+    }
+  });
+  // 监听忽略鼠标事件的请求
+  ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
+    mainWindow.setIgnoreMouseEvents(ignore, options);
+  });
+
+  // 监听打开系统应用的请求
+  ipcMain.on('open-system-app', (event, appName) => {
+    if (process.platform === 'win32') {
+      exec(`start ${appName}`, (error) => {
+        if (error) {
+          console.error(`启动应用错误: ${error}`);
+        }
+      });
+    } else if (process.platform === 'darwin') {
+      exec(`open -a "${appName}"`, (error) => {
+        if (error) {
+          console.error(`启动应用错误: ${error}`);
+        }
+      });
+    } else if (process.platform === 'linux') {
+      exec(appName, (error) => {
+        if (error) {
+          console.error(`启动应用错误: ${error}`);
+        }
+      });
+    }
+  });
+
+  // 监听系统截图请求
+  ipcMain.on('take-system-screenshot', (event) => {
+    if (process.platform === 'darwin') {
+      // macOS 截图快捷键 Cmd+Shift+4
+      exec('screencapture -i ~/Desktop/screenshot.png', (error) => {
+        if (error) {
+          console.error(`截图错误: ${error}`);
+        }
+      });
+    }
+    // 对于其他平台，已在 renderer.js 中处理
+  });
+
+  // 存储设置窗口的引用
+  let settingsWindow = null;
+
+  // 监听打开设置窗口的请求
+  ipcMain.on('open-settings', () => {
+    // 如果设置窗口已经存在，则聚焦到该窗口
+    if (settingsWindow) {
+      settingsWindow.focus();
+      return;
+    }
+    
+    settingsWindow = new BrowserWindow({
+      width: 800,
+      height: 600,
+      title: '桌面宠物设置',
+      frame: false,
+      resizable: true,
+      minimizable: true,
+      maximizable: false,
+      parent: mainWindow,
+      modal: false,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false, // 注意这里设置为false
+        enableRemoteModule: true // 如果需要使用remote模块
+      }
+    });
+    
+    // 加载设置页面
+    settingsWindow.loadFile('settings.html');
+    
+    // 处理窗口关闭事件
+    settingsWindow.on('closed', () => {
+      settingsWindow = null;
+    });
+  });
+
+  // 窗口控制
+  ipcMain.on('window-control', (event, command) => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return;
+
     if (command === 'minimize') {
-      settingsWindow.minimize();
+      win.minimize();
     } else if (command === 'close') {
-      settingsWindow.close();
+      win.close();
     }
-  }
-});
+  });
 
-// 监听退出应用请求
-ipcMain.on('quit-app', () => {
-  app.quit();
-});
+  // 监听退出应用请求
+  ipcMain.on('quit-app', () => {
+    app.quit();
+  });
 
-// 监听保存设置请求
-ipcMain.on('save-settings', (event, settings) => {
-  try {
-    // 更新当前设置
-    currentSettings = { ...settings };
-    
-    // 保存到文件
-    const settingsPath = path.join(__dirname, 'settings.json');
-    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
-    
-    // 应用设置
-    applySettings(settings);
-    
-    // 通知设置窗口保存成功
-    if (settingsWindow) {
-      settingsWindow.webContents.send('settings-saved', true);
+  // 监听保存设置请求
+  ipcMain.on('save-settings', (event, settings) => {
+    try {
+      // 更新当前设置
+      currentSettings = { ...settings };
+      
+      // 保存到文件
+      const settingsPath = path.join(__dirname, 'settings.json');
+      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
+      
+      // 应用设置
+      applySettings(settings);
+      
+      // 通知设置窗口保存成功
+      if (settingsWindow) {
+        settingsWindow.webContents.send('settings-saved', true);
+      }
+    } catch (error) {
+      console.error('保存设置失败:', error);
+      
+      // 通知设置窗口保存失败
+      if (settingsWindow) {
+        settingsWindow.webContents.send('settings-saved', false);
+      }
     }
-  } catch (error) {
-    console.error('保存设置失败:', error);
-    
-    // 通知设置窗口保存失败
-    if (settingsWindow) {
-      settingsWindow.webContents.send('settings-saved', false);
-    }
-  }
-});
+  });
+}
 
 // 加载设置
 function loadSettings() {
@@ -226,6 +254,8 @@ function loadSettings() {
   } catch (error) {
     console.error('加载设置失败:', error);
   }
+  
+  return currentSettings;
 }
 
 // 应用设置
@@ -233,10 +263,8 @@ function applySettings(settings) {
   // 设置窗口置顶
   if (mainWindow) {
     mainWindow.setAlwaysOnTop(settings.topmost);
-  }
-  
-  // 通知渲染进程应用设置
-  if (mainWindow) {
+    
+    // 通知渲染进程应用设置
     mainWindow.webContents.send('apply-settings', settings);
   }
 }

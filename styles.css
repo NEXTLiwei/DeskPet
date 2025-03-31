@@ -10,6 +10,8 @@ html, body {
 
 /* 上下文菜单样式 */
 #context-menu {
+  position: fixed; 
+  width: 120px;    
   background-color: white;
   box-shadow: 0 2px 10px rgba(0,0,0,0.2);
   border-radius: 4px;
@@ -117,4 +119,27 @@ html, body {
   border-width: 10px 10px 0;
   border-style: solid;
   border-color: white transparent;
+}
+.tool-container {
+  position: absolute;
+  z-index: 999;
+}
+
+.tool {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  background-color: #4a90e2;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+}
+
+.tool:hover {
+  transform: scale(1.1);
 }
