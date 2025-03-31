@@ -138,11 +138,4 @@ npm run build
 2. 在`handleToolClick()`函数中添加工具处理
 3. 更新设置页面中的工具选项
 
-## 许可
 
-本项目采用MIT许可证 - 详情请参见LICENSE文件。
-
-## 致谢
-
-- 图标和宠物图像来源于[设计资源]
-- 使用[Electron](https://www.electronjs.org/)构建
